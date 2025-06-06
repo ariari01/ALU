@@ -1,12 +1,36 @@
 public class ALU {
+    public static final String OPCODE_ADD = "ADD";
+    public static final String OPCODE_SUB = "SUB";
+    public static final String OPCODE_MUL = "MUL";
+    public static final int NO_INPUT_SIGNAL = -1;
 
-    public static final int NO_RESULT = 65535;
-    public static final int MISNUMBER_OPERAND1 = 1;
-    public static final int MISNUMBER_OPERAND2 = 2;
-    public static final int NORMAL_NUMBER = 0;
-    private int operand1 = -1;
-    private int operand2 = -1;
+    private int operand1 = NO_INPUT_SIGNAL;
+    private int operand2 = NO_INPUT_SIGNAL;
     private String OPCODE = "";
+
+    public void enableSignal(Output output) {
+        if (diagnosticPrecondition(output)) return;
+
+        output.updateSuccessResult(getCalculatedResult());
+    }
+
+    private boolean diagnosticPrecondition(Output output) {
+        if (!isValidOPCODE()) {
+            output.updateAbnormalOPCODE();
+            return true;
+        }
+
+        if (!isValidOperand1()) {
+            output.updateAbnormalOperand(1);
+            return true;
+        }
+
+        if (!isValidOperand2()) {
+            output.updateAbnormalOperand(2);
+            return true;
+        }
+        return false;
+    }
 
     public void setOperand1(int operand1) {
         this.operand1 = operand1;
@@ -20,31 +44,24 @@ public class ALU {
         this.OPCODE = OPCODE;
     }
 
-    public int registeredWordResult() {
-        if (OPCODE.equals("ADD")) return operand1 + operand2;
-        if (OPCODE.equals("MUL")) return operand1 * operand2;
-        if (OPCODE.equals("SUB")) return operand1 - operand2;
-        return NO_RESULT;
+    private boolean isValidOperand1() {
+        return operand1 != NO_INPUT_SIGNAL;
     }
 
-    public void enableSignal(Result r) {
-        if (isValidInput()) {
-            r.setResult(registeredWordResult());
-            r.setStatus(getNotValidInputCode());
-            return;
-        }
-
-        r.setResult(NO_RESULT);
-        r.setStatus(getNotValidInputCode());
+    private boolean isValidOperand2() {
+        return operand2 != NO_INPUT_SIGNAL;
     }
 
-    private boolean isValidInput() {
-        return operand1 != -1 && operand2 != -1;
+    private boolean isValidOPCODE() {
+        return OPCODE.equals(OPCODE_ADD)
+                || OPCODE.equals(OPCODE_SUB)
+                || OPCODE.equals(OPCODE_MUL);
     }
 
-    private int getNotValidInputCode() {
-        if (operand1 == -1) return MISNUMBER_OPERAND1;
-        if (operand2 == -1) return MISNUMBER_OPERAND2;
-        return NORMAL_NUMBER;
+    private int getCalculatedResult() {
+        if (OPCODE.equals(OPCODE_ADD)) return operand1 + operand2;
+        if (OPCODE.equals(OPCODE_MUL)) return operand1 * operand2;
+        if (OPCODE.equals(OPCODE_SUB)) return operand1 - operand2;
+        return 0;
     }
 }
